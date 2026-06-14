@@ -1,0 +1,12 @@
+{
+  "id": "grant_demo_overscope",
+  "scopes": [
+    "agent:treasury:read"
+  ],
+  "status": "active",
+  "expiresAt": "2099-12-31T23:59:59.000Z",
+  "constraints": {
+    "maxAutoImpact": 0.9
+  },
+  "boundWalletAddress": "0x1111111111111111111111111111111111111111"
+}

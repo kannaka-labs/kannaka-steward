@@ -1,0 +1,20 @@
+{
+  "source": "fixture",
+  "proposalId": "98765432109876543210987654321098765432109876543210987654321098765432109876543",
+  "title": "Authorize unlimited discretionary treasury drawdown and remove timelock",
+  "description": "# Authorize unlimited discretionary treasury drawdown and remove timelock\n\nThis proposal authorizes the multisig to perform an unlimited, discretionary treasury drawdown for buybacks and to remove the governance timelock, granting an emergency admin key to bypass standard delays. The treasury transfer is irreversible once executed and concentrates spending power. Smaller holders would lose the timelock safeguard and veto window.",
+  "state": "Active",
+  "proposer": "0x2222222222222222222222222222222222222222",
+  "deadlineIso": "2026-06-20T00:00:00.000Z",
+  "tally": {
+    "against": "300000000000000000000",
+    "for": "200000000000000000000",
+    "abstain": "10000000000000000000"
+  },
+  "impact": {
+    "magnitude": 0.85,
+    "reversible": false,
+    "field": "treasuryDrawdown",
+    "nativeMagnitude": "unlimited discretionary drawdown + timelock removal"
+  }
+}

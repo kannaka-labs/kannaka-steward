@@ -1,0 +1,32 @@
+{
+  "source": "fixture",
+  "id": "mkt_energy_winter_2026",
+  "title": "Will the regional wholesale electricity price index exceed 1.4x its trailing-90-day average in Q1 2026?",
+  "description": "Binary prediction market on a winter energy price spike for the regional grid. A YES resolution corresponds to a sustained wholesale electricity price spike (>1.4x trailing average) during Q1. Holders exposed to energy costs can hedge real exposure by taking a YES position: if the spike materializes, the position pays out and offsets higher real-world energy bills. The market is liquid (deep LMSR book) and the position is fully reversible — shares can be sold back to the AMM at any time before resolution.",
+  "category": "energy",
+  "region": "us-midwest",
+  "type": "binary",
+  "state": "active",
+  "liquidity": "5000",
+  "liquidityParameter": "5000",
+  "resolutionDate": "2026-09-30T00:00:00.000Z",
+  "outcomes": [
+    {
+      "id": "out_yes",
+      "name": "YES — price index exceeds 1.4x trailing average",
+      "probability": "0.38",
+      "shares": "1200"
+    },
+    {
+      "id": "out_no",
+      "name": "NO — price index stays at or below 1.4x",
+      "probability": "0.62",
+      "shares": "3700"
+    }
+  ],
+  "hedge": {
+    "outcomeId": "out_yes",
+    "budget": 1000,
+    "note": "Owner has real energy-cost exposure; favors a bounded YES hedge in a liquid market within risk budget."
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "source": "fixture",
+  "id": "mkt_thin_obscure_2026",
+  "title": "Will an obscure single-supplier materials contract be renewed before year end?",
+  "description": "Thinly-traded conditional market with a shallow LMSR book. Liquidity is far below the charter floor, so any meaningful position would move the price drastically (high slippage) and a fill would be unreliable. The market nominally references a materials hedge but is illiquid and the only viable position size blows past the risk budget.",
+  "category": "materials",
+  "region": "global",
+  "type": "conditional",
+  "state": "active",
+  "liquidity": "40",
+  "liquidityParameter": "40",
+  "resolutionDate": "2026-12-31T00:00:00.000Z",
+  "outcomes": [
+    {
+      "id": "out_yes",
+      "name": "YES — contract renewed",
+      "probability": "0.5",
+      "shares": "10"
+    },
+    {
+      "id": "out_no",
+      "name": "NO — contract lapses",
+      "probability": "0.5",
+      "shares": "10"
+    }
+  ],
+  "hedge": {
+    "outcomeId": "out_yes",
+    "budget": 1000,
+    "note": "Illiquid + would require an oversized position to hedge; expect escalation."
+  }
+}

@@ -1,0 +1,82 @@
+# Intent Charter — example market / risk steward.
+#
+# This encodes a risk-disciplined trading intent for an LMSR prediction market:
+# the agent should favor positions that HEDGE real exposure, are within the risk
+# budget, and sit in LIQUID markets; oppose oversized positions, illiquid
+# markets, and high-slippage fills; and ABSTAIN (take no position) when it is
+# not confident it would act as the owner would. Contains NO personal data —
+# `owner` is a label only.
+#
+# Why a trade can reach PROCEED where a treasury vote cannot: a market position
+# is BOUNDED (capped by the budget) and REVERSIBLE (shares sell back to the AMM).
+
+id: markets.steward.risk
+version: "1.0.0"
+owner: "GhostSignals Risk Steward (label only)"
+
+confidenceThreshold: 0.6
+abstainWhenUncertain: true
+
+authority:
+  # The kernel may only ever *propose* taking positions whose normalized impact
+  # (position cost / budget) is at or below this. Larger → human.
+  maxAutoImpact: 0.5
+  perWindow:
+    window: "24h"
+    maxActions: 5
+
+principles:
+  - id: p.hedge-real-exposure
+    statement: "Favor positions that hedge real-world exposure the owner already carries (energy, food, materials cost risk)."
+    weight: 0.9
+    polarity: favor
+    matchHints: [hedge, exposure, offset, energy, price spike, price index, cost risk, insure, protect, real-world]
+
+  - id: p.liquidity
+    statement: "Favor liquid markets with a deep book so fills are reliable and price impact is small."
+    weight: 0.8
+    polarity: favor
+    matchHints: [liquid, deep, depth, liquidity, tight spread, reliable fill]
+
+  - id: p.risk-budget
+    statement: "Favor bounded positions within the stated risk budget; size to the budget, never beyond it."
+    weight: 0.85
+    polarity: favor
+    matchHints: [bounded, within budget, risk budget, sized, capped, reversible, sellable]
+
+  - id: p.oppose-oversize
+    statement: "Oppose oversized positions that exceed the risk budget or concentrate too much in one market."
+    weight: 0.9
+    polarity: oppose
+    matchHints: [oversized, blows past, exceed budget, concentrate, all-in, leverage, unbounded]
+
+  - id: p.oppose-illiquid
+    statement: "Oppose thin, illiquid, or obscure markets where fills are unreliable and slippage is high."
+    weight: 0.85
+    polarity: oppose
+    matchHints: [illiquid, thin, shallow, obscure, single-supplier, unreliable, high slippage, drastically]
+
+hardConstraints:
+  - id: hc.min-liquidity
+    statement: "Refuse to auto-trade in markets thinner than the liquidity floor; escalate to a human."
+    rule:
+      kind: minLiquidity
+      floor: 250
+
+  - id: hc.max-slippage
+    statement: "Escalate if the proposed order's price slippage exceeds 0.05."
+    rule:
+      kind: maxSlippage
+      limit: 0.05
+
+  - id: hc.max-position-fraction
+    statement: "Escalate if the position cost exceeds 0.4 of the stated risk budget."
+    rule:
+      kind: maxPositionFraction
+      limit: 0.4
+
+  - id: hc.human-above-size
+    statement: "Any position costing more than 0.35 of the budget requires explicit human sign-off."
+    rule:
+      kind: requireHumanAboveSize
+      fraction: 0.35

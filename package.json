@@ -1,0 +1,27 @@
+{
+  "name": "@kannaka/steward",
+  "version": "0.1.0",
+  "description": "The Steward — a surface-agnostic Intent & Reliability Kernel for faithful agent action. Conscience before wallet: reads, reasons, dry-runs, and emits a human-signable package. Structurally incapable of executing, signing, or spending.",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "steward": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "govern": "node --loader ts-node/esm src/cli.ts",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "ethers": "^6.13.0",
+    "yaml": "^2.5.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.16.0",
+    "typescript": "^5.5.0",
+    "vitest": "^2.0.0"
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "source": "fixture",
+  "proposalId": "12047917831043523938523904568193045671230948572039485710293847561029384756102",
+  "title": "Publish quarterly treasury transparency report and enable on-chain audit dashboard",
+  "description": "# Publish quarterly treasury transparency report and enable on-chain audit dashboard\n\nThis proposal directs the DAO to publish a quarterly treasury transparency report and stand up a public, read-only on-chain audit dashboard so all stAMOR holders can independently verify reserves and flows. The change is reversible: the dashboard is a read-only viewer and the reporting cadence can be amended or sunset by a later vote. No treasury funds are moved by this proposal; it only mandates disclosure and adds visibility for smaller holders. A 90-day pilot is proposed, after which the DAO reviews and may continue, adjust, or discontinue.",
+  "state": "Active",
+  "proposer": "0x1111111111111111111111111111111111111111",
+  "deadlineIso": "2026-06-20T00:00:00.000Z",
+  "tally": {
+    "against": "120000000000000000000",
+    "for": "880000000000000000000",
+    "abstain": "45000000000000000000"
+  },
+  "impact": {
+    "magnitude": 0.15,
+    "reversible": true,
+    "field": "governance-disclosure",
+    "nativeMagnitude": "no funds moved; reporting + read-only dashboard"
+  }
+}

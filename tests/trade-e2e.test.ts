@@ -145,8 +145,10 @@ describe('e2e: ghostsignals trade through the real CLI', () => {
       expect(out).toContain('PROCEED');
       expect(out).toContain('PERMITTED grant=grant_demo_granted');
       expect(out).toContain('live LMSR cross-check'); // the read-only /quote cross-check ran
-      // The emitted, unsigned order package.
+      // The emitted, unsigned order package, marked explicitly human-action-required.
       expect(out).toContain('UNSIGNED ORDER PACKAGE');
+      expect(out).toMatch(/HUMAN\/keyholder to submit/);
+      expect(out).toContain('will not POST it');
       expect(out).toContain('/api/trading');
       expect(out).toMatch(/"marketId":"mkt_energy_winter_2026"/);
       expect(out).toMatch(/"type":"buy"/);
@@ -207,5 +209,32 @@ describe('e2e: ghostsignals trade through the real CLI', () => {
     expect(records.length).toBe(1);
     expect(records[0]!.verdict.decision).toBe('proceed');
     expect(records[0]!.warrant?.authorized).toBe(false);
+  });
+
+  it('bounded authority: an out-of-bounds (illiquid, high-slippage) market ⇒ ESCALATE, no order', async () => {
+    // The illiquid fixture sits far below the charter's liquidity floor (250)
+    // and any fill blows past the slippage limit (0.05) — the rails must block
+    // it BEFORE any warrant is consulted. Proves bounded authority is enforced.
+    const auditPath = tmpAudit();
+    const { code, out } = await runCli(['trade', '--market', 'illiquid', '--warrant', 'granted', '--audit', auditPath]);
+
+    expect(code).toBe(0);
+    // Rails escalate on the hard-constraint breach...
+    expect(out).toContain('ESCALATE');
+    expect(out).toContain('ESCALATION NOTICE');
+    // ...naming the breached bounds (liquidity floor + slippage limit)...
+    expect(out).toMatch(/liquidity 40 below floor 250/);
+    expect(out).toMatch(/slippage 0\.\d+ exceeds limit 0\.05/);
+    // ...the warrant is never consulted (rails already blocked)...
+    expect(out).toContain('not consulted');
+    // ...and NO order package / calldata is produced.
+    expect(out).not.toContain('UNSIGNED ORDER PACKAGE');
+    expect(out).toContain('No order package is produced');
+
+    const records = new AuditLog(auditPath).readAll();
+    expect(records.length).toBe(1);
+    expect(records[0]!.verdict.decision).toBe('escalate');
+    expect(records[0]!.warrant).toBeNull(); // never consulted
+    expect(new AuditLog(auditPath).verify().ok).toBe(true);
   });
 });

@@ -12,18 +12,47 @@
  *        - forbidIrreversible + supporting an irreversible   => refuse
  *   3. Authority bound (authority.maxAutoImpact).
  *   4. Abstain handling per charter.abstainWhenUncertain.
+ *   5. Rate limit (authority.perWindow): at most maxActions PROCEED actions per
+ *      charter per rolling window, counted from the audit log. See below.
  *
  * The rails NEVER produce "proceed" unless the action is bounded, reversible
- * enough, confidently aligned, and within authority. When in doubt: escalate.
+ * enough, confidently aligned, within authority, AND within the rate budget.
+ * When in doubt: escalate.
  */
 
+import type { AuditRecord } from './audit.js';
 import type { Charter, HardConstraint } from './charter.js';
 import type { ActionContext, Judgment, Verdict } from './types.js';
+
+/**
+ * Audit-backed context the rails need to enforce authority.perWindow. It is the
+ * caller's job (the steward loop, which owns the audit log) to supply this — the
+ * rails cannot read the log themselves. Omit it entirely (or leave perWindow
+ * undefined on the charter) to skip rate enforcement; that is why the ~existing
+ * direct verify() callers keep working unchanged.
+ */
+export interface RateLimitContext {
+  /**
+   * PRIOR audit records (all of them). The counter filters by charterId, window,
+   * and qualifying verdict itself — pass the whole log and let the rails decide.
+   */
+  priorRecords?: AuditRecord[];
+  /**
+   * Set to a reason string when the audit log could NOT be read/parsed. Forces a
+   * fail-safe escalate: without a trustworthy count we must not assume we are
+   * under the limit. A cleanly-absent log is NOT unreadable — it is zero prior
+   * actions (a fresh system), and its first action is legitimately allowed.
+   */
+  unreadable?: string;
+  /** Evaluation instant (epoch ms); defaults to Date.now(). Injectable for tests. */
+  now?: number;
+}
 
 export function verify(
   judgment: Judgment,
   action: ActionContext,
   charter: Charter,
+  rate?: RateLimitContext,
 ): Verdict {
   const reasons: string[] = [];
   let worst: Verdict['decision'] = 'proceed';
@@ -90,11 +119,90 @@ export function verify(
     escalate(`market state is "${action.state}", not active/open; the market may be closed.`);
   }
 
+  // --- 5. Rate limit (authority.perWindow) -----------------------------------
+  // Enforced ONLY when the charter declares perWindow AND the caller supplied a
+  // rate context (the steward loop always does; direct callers / tests opt in).
+  if (charter.authority.perWindow && rate) {
+    enforceRateLimit(charter.authority.perWindow, charter.id, rate, escalate);
+  }
+
   if (worst === 'proceed') {
-    reasons.push('All rails satisfied: confident, within authority, no hard-constraint breach.');
+    reasons.push('All rails satisfied: confident, within authority, within rate budget, no hard-constraint breach.');
   }
 
   return { decision: worst, reasons };
+}
+
+/**
+ * Enforce authority.perWindow from the audit trail.
+ *
+ * What counts as an "action": a record whose rails verdict is `proceed`. That is
+ * the kernel's authority-level decision to ACT; escalations and refusals are the
+ * kernel declining to act (handing off to a human) and consume no budget. A
+ * proceed that was later blocked by the warrant gate STILL counts here — the
+ * rate limit lives under `authority`, alongside maxAutoImpact, and bounds the
+ * rails' authority to propose action, which is decided before (and independent
+ * of) the downstream warrant. Counting it can only trip the limit sooner, which
+ * is the fail-safe direction.
+ *
+ * Fail-safe: if the audit log is unreadable, or the window spec is unparseable,
+ * or a qualifying record carries an unparseable timestamp, we escalate / count
+ * conservatively rather than silently allow.
+ */
+function enforceRateLimit(
+  pw: { window: string; maxActions: number },
+  charterId: string,
+  rate: RateLimitContext,
+  escalate: (r: string) => void,
+): void {
+  if (rate.unreadable) {
+    escalate(
+      `rate limit ${pw.maxActions}/${pw.window} cannot be verified: audit log unreadable (${rate.unreadable}); escalating rather than assuming zero prior actions.`,
+    );
+    return;
+  }
+
+  const windowMs = parseWindowMs(pw.window);
+  if (windowMs === undefined) {
+    escalate(
+      `rate limit window "${pw.window}" is unparseable; cannot enforce authority.perWindow — escalating.`,
+    );
+    return;
+  }
+
+  const now = rate.now ?? Date.now();
+  const cutoff = now - windowMs;
+  let count = 0;
+  for (const r of rate.priorRecords ?? []) {
+    if (r.charterId !== charterId) continue;
+    if (r.verdict.decision !== 'proceed') continue;
+    const t = Date.parse(r.ts);
+    if (Number.isNaN(t)) {
+      // A qualifying record we cannot place in time — count it (err toward blocking).
+      count += 1;
+      continue;
+    }
+    if (t > cutoff && t <= now) count += 1;
+  }
+
+  if (count >= pw.maxActions) {
+    escalate(
+      `rate limit reached: ${count} prior proceed action(s) for charter "${charterId}" within ${pw.window} ≥ maxActions ${pw.maxActions}; a human should authorize further action.`,
+    );
+  }
+}
+
+/**
+ * Parse a rolling-window spec ("24h", "30m", "1d", "10s") into milliseconds.
+ * Returns undefined for anything malformed so the caller can fail safe.
+ */
+export function parseWindowMs(window: string): number | undefined {
+  const m = /^(\d+)\s*([smhd])$/.exec(window.trim());
+  if (!m) return undefined;
+  const n = Number(m[1]);
+  if (!Number.isFinite(n) || n <= 0) return undefined;
+  const unit = { s: 1_000, m: 60_000, h: 3_600_000, d: 86_400_000 }[m[2] as 's' | 'm' | 'h' | 'd'];
+  return n * unit;
 }
 
 function applyHardConstraint(

@@ -28,7 +28,7 @@ import type { SurfaceAdapter } from './adapter.js';
 import type { LoadedCharter } from './charter.js';
 import type { IntentReasoner } from './reason.js';
 import { DeterministicReasoner } from './reason.js';
-import { verify } from './rails.js';
+import { verify, type RateLimitContext } from './rails.js';
 import { checkWarrant, scopeForAction, type CheckWarrantOptions } from './warrant.js';
 import { AuditLog, DEFAULT_AUDIT_PATH } from './audit.js';
 import type {
@@ -99,7 +99,17 @@ export async function runSteward(
   const judgment = await reasoner.judge(action, charter);
 
   // 3. RAILS — the safety arbiter.
-  const verdict = verify(judgment, action, charter);
+  //    Read the PRIOR audit records so the rails can enforce authority.perWindow
+  //    (count proceed actions within the rolling window). Reading is fail-safe:
+  //    a genuinely absent log is zero prior actions, but a log we cannot parse
+  //    forces the rails to escalate rather than assume we are under the limit.
+  let rate: RateLimitContext;
+  try {
+    rate = { priorRecords: audit.readAll() };
+  } catch (e) {
+    rate = { unreadable: (e as Error).message };
+  }
+  const verdict = verify(judgment, action, charter, rate);
 
   // 4. DRY-RUN only if the rails permit proceeding. SIMULATION ONLY.
   let dryRun: DryRunResult | null = null;

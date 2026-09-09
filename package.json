@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "The Steward — a surface-agnostic Intent & Reliability Kernel for faithful agent action. Conscience before wallet: reads, reasons, dry-runs, and emits a human-signable package. Structurally incapable of executing, signing, or spending.",
   "type": "module",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "bin": {
     "steward": "./dist/cli.js"
   },

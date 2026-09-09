@@ -72,3 +72,7 @@ trade** (intent: risk limits / position caps; same read→reason→rails→dry-r
 shape; dry-run builds an unsigned order). **PFORK treasury** follows but should
 start in pure-escalation mode (treasury moves are irreversible/high-impact and
 should always route to a human under this charter).
+
+## License
+
+[Space Child License v1.0](https://legal.spacechild.love/license) — source-available and peace-conditional: free for peaceful, humanitarian, commercial and defensive use; withheld for the uses in its Peace Clause. See `LICENSE` and `NOTICE`.

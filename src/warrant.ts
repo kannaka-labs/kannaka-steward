@@ -25,6 +25,7 @@
 
 import { readFileSync } from 'node:fs';
 import type { WarrantVerdict } from './types.js';
+import { resolveAsset } from './assets.js';
 
 /** Agent scope strings the warrant layer recognizes (mirror of spacechild-auth). */
 export const AGENT_SCOPES = {
@@ -157,7 +158,7 @@ function checkWarrantOffline(opts: CheckWarrantOptions): WarrantVerdict {
 
 function loadGrantFixture(path?: string): GrantFixture {
   if (!path) throw new Error('no fixturePath provided');
-  const raw = JSON.parse(readFileSync(path, 'utf8')) as GrantFixture;
+  const raw = JSON.parse(readFileSync(resolveAsset(path), 'utf8')) as GrantFixture;
   return raw;
 }
 

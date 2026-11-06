@@ -16,6 +16,7 @@
 import { readFileSync } from 'node:fs';
 import { ethers } from 'ethers';
 import type { SurfaceAdapter } from '../adapter.js';
+import { resolveAsset } from '../assets.js';
 import type {
   ActionContext,
   DryRunResult,
@@ -125,7 +126,7 @@ export class AmorAdapter implements SurfaceAdapter {
 
   private loadFixture(): AmorProposalFixture {
     const path = this.opts.fixturePath ?? 'fixtures/amor-proposal.json';
-    const raw = JSON.parse(readFileSync(path, 'utf8')) as AmorProposalFixture;
+    const raw = JSON.parse(readFileSync(resolveAsset(path), 'utf8')) as AmorProposalFixture;
     return raw;
   }
 

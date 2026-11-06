@@ -22,6 +22,7 @@
 import { readFileSync } from 'node:fs';
 import type { SurfaceAdapter } from '../adapter.js';
 import { quote as lmsrQuote, prices as lmsrPrices } from '../lmsr.js';
+import { resolveAsset } from '../assets.js';
 import type {
   ActionContext,
   CandidateOrder,
@@ -108,7 +109,7 @@ export class GhostsignalsAdapter implements SurfaceAdapter {
 
   private loadFixture(): GhostsignalsMarketJson {
     const path = this.opts.fixturePath ?? 'fixtures/ghostsignals-market.json';
-    return JSON.parse(readFileSync(path, 'utf8')) as GhostsignalsMarketJson;
+    return JSON.parse(readFileSync(resolveAsset(path), 'utf8')) as GhostsignalsMarketJson;
   }
 
   /** Read a market, normalized. Tries live first, falls back to fixture. */

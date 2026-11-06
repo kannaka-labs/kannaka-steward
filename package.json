@@ -7,11 +7,41 @@
   "bin": {
     "steward": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "!dist/**/*.map",
+    "charters",
+    "fixtures",
+    "README.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kannaka-labs/kannaka-steward.git"
+  },
+  "homepage": "https://github.com/kannaka-labs/kannaka-steward#readme",
+  "keywords": [
+    "agent",
+    "governance",
+    "intent",
+    "dry-run",
+    "safety",
+    "dao"
+  ],
+  "author": "Nick Flach <nflach78@gmail.com>",
   "scripts": {
     "build": "tsc",
     "govern": "node --loader ts-node/esm src/cli.ts",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prepublishOnly": "npm run build && npm test"
   },
   "dependencies": {
     "ethers": "^6.13.0",

@@ -13,6 +13,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 import { z } from 'zod';
+import { resolveAsset } from './assets.js';
 
 /** A machine-checkable rule attached to a hard constraint. */
 export const HardRuleSchema = z.discriminatedUnion('kind', [
@@ -139,7 +140,7 @@ export function validateCharter(raw: unknown): LoadedCharter {
 
 /** Load + validate a charter from a YAML file path. */
 export function loadCharter(path: string): LoadedCharter {
-  const text = readFileSync(path, 'utf8');
+  const text = readFileSync(resolveAsset(path), 'utf8');
   const raw = parseYaml(text);
   return validateCharter(raw);
 }
